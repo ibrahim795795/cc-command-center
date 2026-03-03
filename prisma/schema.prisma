@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Card {
+  id                      String    @id @default(cuid())
+  nickname                String    @unique
+  issuer                  String?
+  network                 String?
+  pointsProgram           String?
+  last4                   String?
+  annualFeeAmount         Float?
+  annualFeeWaived         Boolean   @default(false)
+  annualFeeNegotiated     Boolean   @default(false)
+  negotiatedSavingsAmount Float?
+  negotiatedNewFeeAmount  Float?
+  nextAnnualFeeDate       DateTime?
+  statementCloseDate      Int?      // Day of the month: 1-31
+  paymentDueDate          Int?      // Day of the month: 1-31
+  creditLimit             Float?
+  
+  // Fields from Master Spreadsheet Tracker
+  openedDate              DateTime?
+  tradelineHistory        String?
+  credits                 String?
+  welcomeBonus            String?
+  chase524Status          Boolean   @default(false)
+  status                  String    @default("Active") // Active, Product Changed, Closed
+  retentionMethod         String?
+  notes                   String?
+  userId                  String    @default("offline-user") // To be replaced with real clerk id
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  documents               Document[]
+  bonuses                 Bonus[]
+  tasks                   CardTask[]
+}
+
+model CardTask {
+  id          String   @id @default(cuid())
+  title       String
+  completed   Boolean  @default(false)
+  dueDate     DateTime?
+  cardId      String
+  card        Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  userId      String   @default("offline-user")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Bonus {
+  id                   String    @id @default(cuid())
+  cardId               String
+  card                 Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  offerName            String
+  minSpendAmount       Float?
+  spendDeadlineDate    DateTime?
+  currentSpendProgress Float     @default(0)
+  bonusExpected        Float?
+  bonusPosted          Boolean   @default(false)
+  postedDate           DateTime?
+  statusPipeline       String    @default("In progress") // In progress, Waiting to post, Posted, Archived
+  userId               String    @default("offline-user")
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+model PointsBalance {
+  id          String   @id @default(cuid())
+  program     String   @unique
+  balance     Float    @default(0)
+  lastUpdated DateTime @default(now())
+  notes       String?
+  userId      String   @default("offline-user")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Document {
+  id                 String    @id @default(cuid())
+  cardId             String
+  card               Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  fileName           String
+  filePath           String
+  tag                String?   // Statement, Retention, Promo, Other
+  statementMonthYear String?   // Format: YYYY-MM
+  notes              String?
+  userId             String    @default("offline-user")
+  uploadDate         DateTime  @default(now())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
