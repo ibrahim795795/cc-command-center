@@ -47,11 +47,29 @@ export default function CardsPage() {
     document.body.removeChild(link);
   };
 
+  const syncAppleNotes = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/adopt-cards", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        alert(`Successfully synced ${data.cardsUpdated} Apple Notes to your account!`);
+        window.location.reload();
+      } else {
+        alert("Failed to sync notes.");
+      }
+    } catch (e) {
+      alert("Error syncing.");
+    }
+    setIsLoading(false);
+  };
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Credit Cards</h1>
         <div style={{ display: 'flex', gap: '1rem' }}>
+          <button onClick={syncAppleNotes} className="btn-secondary">⬇️ Sync Apple Notes</button>
           <button onClick={downloadCSV} className="btn-secondary" disabled={cards.length === 0}>Export CSV</button>
           <a href="/cards/new" className="btn-primary">Add Card</a>
         </div>
